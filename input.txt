@@ -1,0 +1,167 @@
+INFO SI-LS-892: UI verification - Input: {"operationalStatus"=>"Infusing", "cca"=>"CCA8", "title"=>{"text"=>"Program and start Loading dose + Continuous therapy on L1. Note: Post infusion settings set to \"KVO\", NEOI should be set (L1- LOADING DOSE) "}, "LEFT_CHANNEL_LINE_1"=>{"step-11"=>{"dose"=>"11 mmol", "doseOrRate"=>"11 mmol", "doseRate"=>"N/A", "medication"=>["CDR022L1 99 mmol/99.9 mL", false], "infusionStatus"=>"Infusing", "therapyType"=>"Loading Dose", "programMode"=>"Loading Dose", "title"=>{"text"=>"Program and start Loading dose + Continuous therapy on L1. Note: Post infusion settings set to \"KVO\", NEOI should be set (L1- LOADING DOSE) "}, "cca"=>"CCA8", "clinicalUse"=>"", "limitAlertsTable"=>{"1"=>["Lower Soft Limit", "Loading Dose Dose", "Lower Soft", "20 mmol", "11 mmol"]}, "postInfusion"=>"kvo", "postInfusionVal"=>"1", "programmedVolume"=>"11.1 mL", "programmedDuration"=>"0 hr 5 min", "deliveryRateRaw"=>"133.2", "deliveryRate"=>"133.2 mL/hr"}, "step-2"=>{"dose"=>"88 mmol", "doseOrRate"=>"88 mmol", "doseRate"=>"N/A", "medication"=>["CDR022L1 99 mmol/99.9 mL", false], "infusionStatus"=>"Infusing", "therapyType"=>"Continuous", "programMode"=>"Continuous", "title"=>{"text"=>"Program and start Loading dose + Continuous therapy on L1. Note: Post infusion settings set to \"KVO\", NEOI should be set (L1- LOADING DOSE) "}, "cca"=>"CCA8", "clinicalUse"=>"", "postInfusion"=>"kvo", "postInfusionVal"=>"1", "programmedDuration"=>"0 hr 11 min", "deliveryRateRaw"=>"484.36", "deliveryRate"=>"484.36 mL/hr", "programmedVolume"=>"88.8 mL"}}}
+ INFO SI-LS-892: ------------------------------------------------------------------------------------------------------------------------------------------------------
+ INFO SI-LS-892: find_current_step ===> LEFT_CHANNEL_LINE_1 and steps: ["step-11", "step-2"]==> lineStatus: LOADING DOSE, stepStatus: Continuous follows Loading, therapyType: LoadingDose, currStep: step-11
+ INFO SI-LS-892: ------------------------------------------------------------------------------------------------------------------------------------------------------
+ INFO SI-LS-892: Input Data: {"operationalStatus"=>"Infusing", "cca"=>"CCA8", "title"=>"Program and start Loading dose + Continuous therapy on L1. Note: Post infusion settings set to \"KVO\", NEOI should be set (L1- LOADING DOSE) ", "currentScreen"=>"MainScreen", "stepNo"=>2, "alarmTable"=>{"deviceList"=>{}, "LEFT_CHANNEL_LINE_1"=>{}, "LEFT_CHANNEL_LINE_2"=>{}, "RIGHT_CHANNEL_LINE_1"=>{}, "RIGHT_CHANNEL_LINE_2"=>{}}, "LEFT_CHANNEL_LINE_1"=>{"dose"=>"11 mmol", "doseOrRate"=>"11 mmol", "doseRate"=>"N/A", "medication"=>["CDR022L1 99 mmol/99.9 mL", false], "infusionStatus"=>"Infusing", "therapyType"=>"Loading Dose", "programMode"=>"Loading Dose", "title"=>"Program and start Loading dose + Continuous therapy on L1. Note: Post infusion settings set to \"KVO\", NEOI should be set (L1- LOADING DOSE) ", "cca"=>"CCA8", "clinicalUse"=>"", "limitAlertsTable"=>{"1"=>["Lower Soft Limit", "Loading Dose Dose", "Lower Soft", "20 mmol", "11 mmol"]}, "postInfusion"=>"kvo", "postInfusionVal"=>"1", "programmedVolume"=>"11.1 mL", "programmedDuration"=>"0 hr 5 min", "deliveryRateRaw"=>"133.2", "deliveryRate"=>"133.2 mL/hr", "lineTherapy"=>"LoadingDose", "currStep"=>"step-11", "lineStatus"=>"LOADING DOSE", "currentScreen"=>"MainScreen"}}
+ INFO SI-LS-892: -----------------------------
+ INFO SI-LS-892: InputHash for UI Verification
+ INFO SI-LS-892: -----------------------------
+ INFO SI-LS-892: |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+ INFO SI-LS-892: |          operationalStatus             |          Infusing                               |
+ INFO SI-LS-892: |          cca                           |          CCA8                                   |
+ INFO SI-LS-892: |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: |          title                         | Program and start Loading dose + Continuous therapy on L1. Note: Post infusion settings set to "KVO", NEOI should be set (L1- LOADING DOSE)  |
+ INFO SI-LS-892: |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: |          currentScreen                 |          MainScreen                             |
+ INFO SI-LS-892: |          stepNo                        |          2                                      |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   alarmTable                                             |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   deviceList                                             |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   LEFT_CHANNEL_LINE_1                                    |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   LEFT_CHANNEL_LINE_2                                    |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   RIGHT_CHANNEL_LINE_1                                   |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   RIGHT_CHANNEL_LINE_2                                   |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   LEFT_CHANNEL_LINE_1                                    |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |          dose                          |          11 mmol                                |
+ INFO SI-LS-892: |          doseOrRate                    |          11 mmol                                |
+ INFO SI-LS-892: |          doseRate                      |          N/A                                    |
+ INFO SI-LS-892: |          medication                    |          ["CDR022L1 99 mmol/99.9 mL", false]    |
+ INFO SI-LS-892: |          infusionStatus                |          Infusing                               |
+ INFO SI-LS-892: |          therapyType                   |          Loading Dose                           |
+ INFO SI-LS-892: |          programMode                   |          Loading Dose                           |
+ INFO SI-LS-892: |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: |          title                         | Program and start Loading dose + Continuous therapy on L1. Note: Post infusion settings set to "KVO", NEOI should be set (L1- LOADING DOSE)  |
+ INFO SI-LS-892: |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: |          cca                           |          CCA8                                   |
+ INFO SI-LS-892: |          clinicalUse                   |                                                 |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |                                   limitAlertsTable                                       |
+ INFO SI-LS-892: |__________________________________________________________________________________________|
+ INFO SI-LS-892: |------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: |          1                             | ["Lower Soft Limit", "Loading Dose Dose", "Lower Soft", "20 mmol", "11 mmol"] |
+ INFO SI-LS-892: |------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: |          postInfusion                  |          kvo                                    |
+ INFO SI-LS-892: |          postInfusionVal               |          1                                      |
+ INFO SI-LS-892: |          programmedVolume              |          11.1 mL                                |
+ INFO SI-LS-892: |          programmedDuration            |          0 hr 5 min                             |
+ INFO SI-LS-892: |          deliveryRateRaw               |          133.2                                  |
+ INFO SI-LS-892: |          deliveryRate                  |          133.2 mL/hr                            |
+ INFO SI-LS-892: |          lineTherapy                   |          LoadingDose                            |
+ INFO SI-LS-892: |          currStep                      |          step-11                                |
+ INFO SI-LS-892: |          lineStatus                    |          LOADING DOSE                           |
+ INFO SI-LS-892: |          currentScreen                 |          MainScreen                             |
+ INFO SI-LS-892: |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+ INFO SI-LS-892: load_or_save_view: true
+ INFO SI-LS-892: Load or Save View: 4.903842 seconds
+ INFO SI-LS-892: Total page refresh Time: 18.9967736 seconds
+ INFO SI-LS-892: ------------------------------------------------------
+ INFO SI-LS-892: Step-2 : Active Infusions Detailed View Details for L1
+ INFO SI-LS-892: ------------------------------------------------------
+ INFO SI-LS-892: | Is detailedViewDisplayed for activeInfusions LEFT_CHANNEL_LINE_1 => true|
+SI-LS-892 2024-04-02T10:22:33+05:30 [INFO] : UIC app running on pid id: 2228
+
+ INFO SI-LS-892: activeInfusions table actual data: ["There are currently no alarms to display."]
+ INFO SI-LS-892: UI Verification Alarm at 1 in Detailed view for activeInfusions Expected: There are currently no alarms to display.| Actual: There are currently no alarms to display. | true      |
+ INFO SI-LS-892: calculationTolerance : {"LEFT_CHANNEL_LINE_1"=>30, "LEFT_CHANNEL_LINE_2"=>30, "RIGHT_CHANNEL_LINE_1"=>30, "RIGHT_CHANNEL_LINE_2"=>30}
+ INFO SI-LS-892: Wrapper Clear Volume Counter : {"LEFT_CHANNEL_LINE_1"=>0, "LEFT_CHANNEL_LINE_2"=>0, "RIGHT_CHANNEL_LINE_1"=>0, "RIGHT_CHANNEL_LINE_2"=>0}
+ INFO SI-LS-892: -------------------------------------------------------------------
+ INFO SI-LS-892: Initial Volume : 0.6, Latest Volume : 2.8 , toleranceApplied : 1.11
+ INFO SI-LS-892: -------------------------------------------------------------------
+ INFO SI-LS-892: |----------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: | Initial Volume                           | Detailed View Volume                     | Latest Volume                              |
+ INFO SI-LS-892: | -0.5100000000000001                       0.0                                         4.91                                        |
+ INFO SI-LS-892: |----------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: remainingHash['Volume Remaining']  (lineInputHash['Programmed Volume'].to_f - lineInputHash['Volume Delivered'].to_f) + @prevVolDelivered[lineMappings[line]][cdrInputHash['currStep']].to_f 
+ INFO SI-LS-892: remainingHash['Volume Remaining'] (11.1 - 0.0) + 0.0
+ INFO SI-LS-892: remainingTime  = (((3600*11.1)/133.2)).to_s
+ INFO SI-LS-892: remainingTime  = 
+ INFO SI-LS-892: remainingHash['Time Remaining'] = 0 hr 5 min
+ INFO SI-LS-892: Volume Remaining ::: Tolerance 2.22 : Expected 11.1 mL : Actual 11.1 mL ::: Result true
+ INFO SI-LS-892: Time Remaining ::: Tolerance 60 : Expected 300 : Actual 300 ::: Result true
+ INFO SI-LS-892: |Time timeDiff: 2024-04-02 10:21:34 +0530|
+ INFO SI-LS-892: |----------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: | Initial Time                             | Detailed Last Updated Time               | Latest Updated Time                        |
+ INFO SI-LS-892: | 2024-04-02 10:21:36 +0530                <= 2024-04-02 10:21:17                        <= 2024-04-02 10:22:34 +0530                   |
+ INFO SI-LS-892: | -8                                       <= 1712033477                                 <= 1712033554                                  |
+ INFO SI-LS-892: |----------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: postInfusionFlag => false
+ INFO SI-LS-892: doseOrRateFlag => false, standAlonebolus => 
+ INFO SI-LS-892: prevVolDelivered => {"step-11"=>nil}
+ INFO SI-LS-892: stepVolDelivered => {"step-11"=>nil}
+ INFO SI-LS-892: ----------------
+ INFO SI-LS-892: Infusion Details
+ INFO SI-LS-892: ----------------
+ INFO SI-LS-892: |====================================================================================================================================================================================================================================|
+ INFO SI-LS-892: | Field                      | Expected                                                                                    | Actual                                                                                      | Result    |
+ INFO SI-LS-892: |====================================================================================================================================================================================================================================|
+ INFO SI-LS-892: | Dose                       | 11 mmol                                                                                     | 11 mmol                                                                                     | true      |
+ INFO SI-LS-892: | Dose Rate                  | N/A                                                                                         | N/A                                                                                         | true      |
+ INFO SI-LS-892: | Medication                 | {"medication"=>"CDR022L1 99 mmol/99.9 mL", "highRisk"=>false}                               | {"medication"=>"CDR022L1 99 mmol/99.9 mL", "highRisk"=>false}                               | true      |
+ INFO SI-LS-892: | Infusion Status            | Infusing                                                                                    | Infusing                                                                                    | true      |
+ INFO SI-LS-892: | Program Mode               | Loading Dose                                                                                | Loading Dose                                                                                | true      |
+ INFO SI-LS-892: | CCA                        | CCA8                                                                                        | CCA8                                                                                        | true      |
+ INFO SI-LS-892: | Clinical Use               |                                                                                             |                                                                                             | true      |
+ INFO SI-LS-892: | Programmed Volume          | 11.1 mL                                                                                     | 11.1 mL                                                                                     | true      |
+ INFO SI-LS-892: | Programmed Duration        | 0 hr 5 min                                                                                  | 0 hr 5 min                                                                                  | true      |
+ INFO SI-LS-892: | Delivery Rate              | 133.2 mL/hr                                                                                 | 133.2 mL/hr                                                                                 | true      |
+ INFO SI-LS-892: | Line                       | L1                                                                                          | L1                                                                                          | true      |
+ INFO SI-LS-892: | Facility                   | Default_sysuserZ8M_Facility                                                                 | Default_sysuserZ8M_Facility                                                                 | true      |
+ INFO SI-LS-892: | Volume Delivered           | 0 mL                                                                                        | 0 mL                                                                                        | true      |
+ INFO SI-LS-892: | Volume Remaining           | 11.1 mL                                                                                     | 11.1 mL                                                                                     | true      |
+ INFO SI-LS-892: | Time Remaining             | 0 hr 5 min                                                                                  | 0 hr 5 min                                                                                  | true      |
+ INFO SI-LS-892: | Last Updated               | 2024-04-02 10:21:17                                                                         | 2024-04-02 10:21:17                                                                         | true      |
+ INFO SI-LS-892: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: ------------
+ INFO SI-LS-892: Pump Details
+ INFO SI-LS-892: ------------
+ INFO SI-LS-892: |====================================================================================================================================================================================================================================|
+ INFO SI-LS-892: | Field                      | Expected                                                                                    | Actual                                                                                      | Result    |
+ INFO SI-LS-892: |====================================================================================================================================================================================================================================|
+ INFO SI-LS-892: | Pump ID                    | ICU02122421D4                                                                               | ICU02122421D4                                                                               | true      |
+ INFO SI-LS-892: | Network Status             | {"mode"=>"Wireless", "status"=>"Online"}                                                    | {"mode"=>"Wireless", "status"=>"Online"}                                                    | true      |
+ INFO SI-LS-892: | Location                   | a2:17:c8:c7:f3:db                                                                           | a2:17:c8:c7:f3:db                                                                           | true      |
+ INFO SI-LS-892: | Software Version           | 1.2.0.45-test                                                                               | 1.2.0.45-test                                                                               | true      |
+ INFO SI-LS-892: | Drug Library Last Updated  | 2024-03-29 00:58:38                                                                         | 2024-03-29 00:58:38                                                                         | true      |
+ INFO SI-LS-892: | Drug Library               | LifeShield : 2.2 10019                                                                      | LifeShield : 2.2 10019                                                                      | true      |
+ INFO SI-LS-892: | Pump Name                  | SilverZ8M                                                                                   | SilverZ8M                                                                                   | true      |
+ INFO SI-LS-892: | Serial Number              | 8000001395                                                                                  | 8000001395                                                                                  | true      |
+ INFO SI-LS-892: | Pump Type                  | Plum Duo                                                                                    | Plum Duo                                                                                    | true      |
+ INFO SI-LS-892: | Power Status               | {"mode"=>"Ac", "status"=>"Powered On"}                                                      | {"mode"=>"Ac", "status"=>"Powered On"}                                                      | true      |
+ INFO SI-LS-892: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: -------------
+ INFO SI-LS-892: Limit Details
+ INFO SI-LS-892: -------------
+ INFO SI-LS-892: @tabularLimit['limitIconData']: ["Lower Soft Limit"]
+ INFO SI-LS-892: Limits Data Expected: [["Lower Soft Limit", "Loading Dose Dose", "Lower Soft", "20 mmol", "11 mmol"]]
+ INFO SI-LS-892: Limits Data Actual: [["Lower Soft Limit", "Loading Dose Dose", "Lower Soft", "20 mmol", "11 mmol"]]
+ INFO SI-LS-892: UI Verification Limit Alert at 1 in Active Infusion Detailed view for L1 |Expected: ["Lower Soft Limit", "Loading Dose Dose", "Lower Soft", "20 mmol", "11 mmol"] |Actual: ["Lower Soft Limit", "Loading Dose Dose", "Lower Soft", "20 mmol", "11 mmol"] | true      |
+ INFO SI-LS-892: --------------------
+ INFO SI-LS-892: Auto Program Details
+ INFO SI-LS-892: --------------------
+ INFO SI-LS-892: |====================================================================================================================================================================================================================================|
+ INFO SI-LS-892: | Field                      | Expected                                                                                    | Actual                                                                                      | Result    |
+ INFO SI-LS-892: |====================================================================================================================================================================================================================================|
+ INFO SI-LS-892: | Patient Name               | —                                                                                           | —                                                                                           | true      |
+ INFO SI-LS-892: | Nursing Unit               | —                                                                                           | —                                                                                           | true      |
+ INFO SI-LS-892: | Room/Bed                   | —                                                                                           | —                                                                                           | true      |
+ INFO SI-LS-892: | Patient ID                 | —                                                                                           | —                                                                                           | true      |
+ INFO SI-LS-892: | Program Source             | Manual                                                                                      | Manual                                                                                      | true      |
+ INFO SI-LS-892: | Order ID                   | —                                                                                           | —                                                                                           | true      |
+ INFO SI-LS-892: | Caregiver ID               | —                                                                                           | —                                                                                           | true      |
+ INFO SI-LS-892: | Caregiver Name             | —                                                                                           | —                                                                                           | true      |
+ INFO SI-LS-892: | Program Source Tooltip     | No icon present                                                                             | No icon present                                                                             | true      |
+ INFO SI-LS-892: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ INFO SI-LS-892: -----------------------------------------------------
