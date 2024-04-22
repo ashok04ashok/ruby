@@ -1,0 +1,16 @@
+def publish_software():
+ try:
+   a
+   print("try")
+ except Exception as e:
+    pass
+    print("excep")
+ else:
+    # Code to execute if no exceptions occurred
+    pass
+    print("else")
+ finally:
+    # Code to always execute, regardless of whether an exception occurred or not
+    pass
+    print("finally")
+publish_software()

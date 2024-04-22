@@ -1,0 +1,770 @@
+  #========================================================================
+   # NAME
+   #     self.create_or_edit_drug_library
+   #
+   # DESCRIPTION
+   #     Method used to Create the Drug Library
+   #
+   # PARAMETERS
+   #     finalize - true, false otherwise
+   #     Screen   - Current Pump Screen
+   #
+   # USAGE EXAMPLES
+   #     self.create_or_edit_drug_library(true, "MainScreen")
+   #========================================================================
+   def self.create_or_edit_drug_library(finalize, screen)
+      retVal = []
+      begin
+         create_lifeshield_instance
+         retVal << mednet_cloud_navigation('drugLibraries')
+         currentPage = @lifeshield.whereAmI
+         if (retVal.last.eql? true) && (currentPage.eql? 'drugLibraries')
+            if (eval("@lifeshield.#{currentPage}.getColumnValues('Drug Library Name')").include? DRUG_LIB_DETAILS[LIBRARY_NAME])
+               @logger.log_message('!!! Drug Library already available !!!', LogUtilities::INFO, false)
+               retVal << eval("@lifeshield.#{currentPage}.clickDrugLibraryRow(DRUG_LIB_DETAILS)")
+               retVal << finalize_drug_library if finalize
+            else
+               retVal << eval("@lifeshield.#{currentPage}.clickCreateDrugLibrary()")
+               retVal << eval("@lifeshield.#{currentPage}.enterLibraryDetails(DRUG_LIB_DETAILS)")
+               retVal << eval("@lifeshield.#{currentPage}.clickCreateLibrary()")
+               retVal << eval("@lifeshield.#{currentPage}.handleConfirmation('Confirm')") if eval("@lifeshield.drugLibraries.isConfirmationDisplayed()")
+               if retVal.all?
+                  sleep 5
+                  retVal << eval("@lifeshield.#{currentPage}.enterInfuserSettings(INFUSER_SETTINGS)")
+                  retVal << eval("@lifeshield.#{currentPage}.clickSaveChanges()")
+                  if retVal.all?
+                     retVal << eval("@lifeshield.#{currentPage}.clickClinicalCareAreas()")
+                     currentPage = @lifeshield.whereAmI
+                     retVal << eval("@lifeshield.#{currentPage}.clickAttachCareAreas()")
+                     retVal << eval("@lifeshield.#{currentPage}.clickAddAll()")
+                     retVal << eval("@lifeshield.#{currentPage}.clickSave()")
+                     if retVal.all?
+                        if finalize
+                           retVal << eval("@lifeshield.#{currentPage}.clickLibrarySettings()")
+                           retVal << finalize_drug_library
+                        end
+                     else
+                        retVal << false
+                        @logger.log_message('Unable to attach/save Clinical Care Area', LogUtilities::INFO, false)
+                     end
+                  else
+                     retVal << false
+                     @logger.log_message('Unable to enter Master Infuser Settings', LogUtilities::INFO, false)
+                  end
+               else
+                  retVal << false
+                  @logger.log_message('Unable to create Drug Library', LogUtilities::INFO, false)
+               end
+            end
+         else
+            retVal << false
+            @logger.log_message("#{currentPage} is not present", LogUtilities::INFO, false)
+         end
+         Int.lifeshield_screen_capture("DL creation issue") if (retVal.last.eql? false)
+      rescue
+         retVal << false
+         Int.lifeshield_screen_capture("DL creation issue") if (retVal.last.eql? false)
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         @dlFailedFlag = nil
+         Int.handle_alarm unless (%w[PowerOff BiomedScreen].include? screen)
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #=============================================
+   # NAME
+   #     self.finalize_drug_library
+   #
+   # DESCRIPTION
+   #     Method used to Finalize the Drug Library
+   #
+   # PARAMETERS
+   #     None
+   #
+   # USAGE EXAMPLES
+   #     self.finalize_drug_library
+   #=============================================
+   def self.finalize_drug_library
+      retVal    = []
+      dlVersion = nil
+      begin
+         retVal << eval("@lifeshield.drugLibraries.clickMarkLibraryForReview()")
+         retVal << eval("@lifeshield.drugLibraries.enableAcknowledge()")
+         retVal << eval("@lifeshield.drugLibraries.isAcknowledgeEnabled()")
+         retVal << eval("@lifeshield.drugLibraries.handleConfirmation('Confirm')")
+         if retVal.all?
+            dlVersion = eval("@lifeshield.drugLibraries.getReviewingVerion()")
+            retVal << eval("@lifeshield.drugLibraries.clickAccept()")
+            retVal << eval("@lifeshield.drugLibraries.enableAcknowledge()")
+            retVal << eval("@lifeshield.drugLibraries.isAcknowledgeEnabled()")
+            retVal << send_and_verify_passcode
+            finalizedTime = Time.now
+            retVal << eval("@lifeshield.drugLibraries.handleConfirmation('Accept')")
+            retVal << Int.wait_for_sw_dl_activation('drug-lib', finalizedTime) if retVal.last
+            @dlVersion = "#{DRUG_LIB_DETAILS[LIBRARY_NAME]} : #{dlVersion}" if retVal.all?
+            @logger.log_message("DL finalize : #{retVal.last}", LogUtilities::INFO, false)
+         else
+            @logger.log_message('Unable to Mark Drug Library for review', LogUtilities::INFO, false)
+         end
+         Int.lifeshield_screen_capture("DL creation issue") if (retVal.last.eql? false)
+      rescue
+         retVal << false
+         Int.lifeshield_screen_capture("DL creation issue") if (retVal.last.eql? false)
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #======================================================
+   # NAME
+   #     self.publish_software
+   #
+   # DESCRIPTION
+   #     Method used to Publish Software
+   #
+   # PARAMETERS
+   #     software - Version to Publish
+   #     Screen   - Current Pump Screen
+   #
+   # USAGE EXAMPLES
+   #     self.publish_software("1.1.0.25", "Main Screen")
+   #======================================================
+   def self.publish_software(software, screen)
+      retVal      = []
+      idxPosition = nil
+      begin
+         account = Nokogiri::XML(File.read('C:\nodejs\node_modules\lifeshield\interface\rubytojs\MedNetCloud.xml')).xpath("//key[@name='customerId-a']/value").text if (File.exist? 'C:\nodejs\node_modules\lifeshield\interface\rubytojs\MedNetCloud.xml')
+         create_lifeshield_instance
+
+         # -----------------------------------------
+         # Logout and Login to Account Manager Login
+         @lifeshield.logout unless @lifeshield.isLoginPageDisplayed
+         retVal << @lifeshield.login('integration', 'Incorrect2!', 'system')
+         currentPage = @lifeshield.whereAmI
+         if (retVal.last.eql? true)
+            retVal << eval("@lifeshield.#{currentPage}.clickSoftwareManagement()")
+            currentPage = @lifeshield.whereAmI
+
+            # -------------------------------------------------
+            # Fetch all the available software versions present
+            swVersions  = eval("@lifeshield.softwareManagement.getVersionColumnValues")
+            swList      = swVersions.each_index.select {|version| swVersions[version] == software}
+            swList.each do |idx|
+               idxPosition = idx if(eval("@lifeshield.softwareManagement.getSoftwareDetails(idx+1)")['info'].include? JAR_COMPONENT_TYPE)
+               break if idxPosition.present?
+            end
+            if idxPosition.present?
+               retVal << eval("@lifeshield.#{currentPage}.clickPublish(idxPosition+1)")
+               retVal << eval("@lifeshield.#{currentPage}.selectAccount(account)") rescue 'Account not present'
+               publishTime = Time.now
+               retVal << eval("@lifeshield.#{currentPage}.handleConfirmation('Publish')") if (retVal.last.eql? true)
+               @logger.log_message("Software #{software} publish request", LogUtilities::INFO, false) if retVal.last
+               retVal << Int.wait_for_sw_dl_activation('software', publishTime) if retVal.last
+               @swVersion = software
+               @logger.log_message('Software is published successfully', LogUtilities::INFO, false) if retVal.all?
+            else
+               retVal << false
+               @logger.log_message("Software is not availble in #{currentPage} to publish", LogUtilities::INFO, false)
+            end
+         else
+            @logger.log_message("Unable to login to account Manager login", LogUtilities::INFO, false)
+         end
+         Int.lifeshield_screen_capture("SW Publish issue") if (retVal.last.eql? false)
+      rescue
+         retVal << false
+         Int.lifeshield_screen_capture("SW Publish issue") if (retVal.last.eql? false)
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         Int.handle_alarm unless (%w[PowerOff BiomedScreen].include? screen)
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         @lifeshield.logout
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #======================================================================
+   # NAME
+   #     self.schedule_software_or_dl
+   #
+   # DESCRIPTION
+   #     Method used to Schedule dl or software
+   #
+   # PARAMETERS
+   #     type    - software or drug-lib
+   #     nameVal - Name of software or drug library
+   #     Screen  - Current Pump Screen
+   #
+   # USAGE EXAMPLES
+   #     self.schedule_software_or_dl(software, "1.1.0.26", "MainScreen")
+   #======================================================================
+   def self.schedule_software_or_dl(type, nameVal, screen)
+      retVal        = []
+      stepNo        = Int.instance_variable_get(:@stepNo)
+      failedState   = false
+      scheduleState = false
+      begin
+         failedState   = (@updateStatus[stepNo.to_s][type].include? FAILED) if @updateStatus[stepNo.to_s][type].present?
+         scheduleState = (@updateStatus[stepNo.to_s][type].include? SCHEDULED) if @updateStatus[stepNo.to_s][type].present?
+         create_lifeshield_instance
+         retVal << mednet_cloud_navigation('deviceUpdateDashboard')
+
+         # ------------------------------------------------------
+         # Form the Expected value while scheduling the s/w or DL
+         updateValue = (((type.eql? 'drug-lib') && (@dlFailedFlag.eql? true)) || ((type.eql? 'software') && (@swFailedFlag.include? nameVal))) ? [ELIGIBLE_FOR_UPDATE, FAILED] : ELIGIBLE_FOR_UPDATE
+         graph 		= (type.eql? 'drug-lib')?  'Drug Libraries' : 'Software Versions'
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickUpdateTab(graph)")
+         retVal << check_update_values(updateValue, nameVal)
+         if (retVal.all?.eql? true)
+            retVal << eval("@lifeshield.deviceUpdateDashboard.clickUpdateWidget('#{nameVal}','Eligible for Update')")
+            retVal << eval("@lifeshield.deviceUpdateDashboard.selectDeviceRow('#{@staticInformation['deviceName']}')")
+            # retVal << eval("@lifeshield.deviceUpdateDashboard.clickUpdateSelected()")
+            retVal << eval("@lifeshield.deviceUpdateDashboard.deviceUpdateView.clickScheduleUpdate()")
+            retVal << send_and_verify_passcode
+            retVal << eval("@lifeshield.deviceUpdateDashboard.handleConfirmation('Confirm')")
+            if retVal.last
+               currentPage = @lifeshield.whereAmI
+               if (failedState.eql? true)
+                  FAILED_STATE_WAIT.times do
+                     eval("@lifeshield.#{currentPage}.clickRefreshNow()")
+                     break if (check_update_values([ELIGIBLE_FOR_UPDATE, FAILED], nameVal))
+                     sleep 60
+                  end
+                  retVal << check_update_values([ELIGIBLE_FOR_UPDATE, FAILED], nameVal)
+                  @logger.log_message("[Eligible for Update, Failed] state verification for #{type} version #{nameVal}: #{retVal.last}", LogUtilities::INFO, false)
+                  @swFailedFlag << nameVal if retVal.all? && (type.eql? 'software')
+                  @dlFailedFlag = true if retVal.all? && (type.eql? 'drug-lib')
+               elsif (scheduleState.eql? true)
+                  SCHEDULE_STATE_WAIT.times do
+                     eval("@lifeshield.#{currentPage}.clickRefreshNow()")
+                     break if (check_update_values(SCHEDULED, nameVal))
+                     sleep 60
+                  end
+                  retVal << check_update_values(SCHEDULED, nameVal)
+                  @logger.log_message("scheduled state verification for #{type} version #{nameVal}: #{retVal.last}", LogUtilities::INFO, false)
+                  @swScheduleFlag = true if retVal.all? && (type.eql? 'software')
+                  @dlScheduleFlag = true if retVal.all? && (type.eql? 'drug-lib')
+               else
+                  if (type.eql? 'software')
+                     SCHEDULE_STATE_WAIT.times do
+                        eval("@lifeshield.#{currentPage}.clickRefreshNow()")
+                        break if (check_update_values(DOWNLOADING, nameVal))
+                        sleep 60
+                     end
+                     retVal << check_update_values(DOWNLOADING, nameVal)
+                     @logger.log_message("Downloading state verification for #{type} version #{nameVal}: #{retVal.last}", LogUtilities::INFO, false)
+                  end
+                  sleepTime = (type.eql? 'software') ? SOFTWARE_UPDATE_WAIT : DRUG_LIB_UPDATE_WAIT
+                  retVal << Int.verify_resource_update_pending_icon(sleepTime, true) unless (%w[PowerOff BiomedScreen].include? screen)
+                  eval("@lifeshield.#{currentPage}.clickRefreshNow()")
+                  status  = (screen.eql? 'PowerOff') ? INSTALLATION_COMPLETE : DOWNLOAD_COMPLETE
+                  timeOut = (status.eql? INSTALLATION_COMPLETE) ? SOFTWARE_UPDATE_WAIT : 20
+                  retVal << Int.check_update_values(status, nameVal, @ceShutdown, timeOut)
+                  @logger.log_message("#{status} state verification for #{type} version #{nameVal}: #{retVal.last}", LogUtilities::INFO, false)
+                  @swScheduleFlag = true if retVal.all? && (type.eql? 'software')
+                  @dlScheduleFlag = true if retVal.all? && (type.eql? 'drug-lib')
+                  @swDownloadFlag = @swVersion if retVal.all? && (type.eql? 'software')
+                  @dlDownloadFlag = @dlVersion if retVal.all? && (type.eql? 'drug-lib')
+                  @dlFailedFlag   = nil if (@dlFailedFlag.eql? true)
+                  @swFailedFlag.delete(nameVal) if (@swFailedFlag.include? nameVal)
+               end
+            else
+               @logger.log_message("#{type} schedule Failed !..", LogUtilities::INFO, false)
+            end
+         else
+            retVal << false
+            @logger.log_message("#{type} information not available/Eligible to schedule", LogUtilities::INFO, false)
+         end
+      rescue
+         retVal << false
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         Int.handle_alarm unless (%w[PowerOff BiomedScreen].include? screen)
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #===================================================================
+   #============================================================================
+   # NAME
+   #     self.check_update_values
+   #
+   # DESCRIPTION
+   #     Method used to check the value in the device update dashboard pie chart
+   #
+   # PARAMETERS
+   #     updateKey - Update value to check in UI
+   #     nameVal   - Name of software or drug library
+   #
+   # USAGE EXAMPLES
+   #     self.check_update_values(INSTALLATION_COMPLETE, "1.1.0.26")
+   #============================================================================
+   def self.check_update_values(updateKey, nameVal)
+      retVal          = []
+      expUpdateValues = {}
+      lsUpdateValues  = []
+      begin
+         currentPage     = @lifeshield.whereAmI
+         if (nameVal.include? '.')
+         	expUpdateValues = SW_UPDATE_VALUES.deep_dup
+         	graph           = 'Software Versions'
+         else
+         	expUpdateValues = DL_UPDATE_VALUES.deep_dup
+         	graph           = 'Drug Libraries'
+         end
+
+         updateArray     = (updateKey.is_a? Array) ? updateKey : [updateKey]
+         updateArray.each { |status| expUpdateValues[status] = '1' }
+         retVal << mednet_cloud_navigation('deviceUpdateDashboard') unless (currentPage.eql? 'deviceUpdateDashboard')
+         currentPage = @lifeshield.whereAmI
+         eval("@lifeshield.#{currentPage}.clickRefreshNow()")
+         eval("@lifeshield.#{currentPage}.clickRefreshNow()")
+         retVal << eval("@lifeshield.#{currentPage}.clickUpdateTab(graph)")
+         lsUpdateValues = eval("@lifeshield.deviceUpdateDashboard.getWidgetLegendValues('#{nameVal}')")
+         expUpdateValues.each do |key, value|
+            lsValue = get_lsupdate_value(key, lsUpdateValues)
+            retVal << ((value.eql? lsValue) ? true : false)
+         end
+      rescue
+         retVal << false
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         @logger.log_message("#{__method__} : #{updateKey} on version #{nameVal} => #{retVal.all?}", LogUtilities::INFO, false)
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #===================================================
+   # NAME
+   #     self.verify_sw_tooltip
+   #
+   # DESCRIPTION
+   #     Method used to verify the software tooltip
+   #
+   # PARAMETERS
+   #     actualSWVersion - Actual s/w version
+   #     expSWVersion    - Expected s/w version
+   #
+   # USAGE EXAMPLES
+   #     self.verify_sw_tooltip("1.1.0.25", "1.1.0.26")
+   #===================================================
+   def self.verify_sw_tooltip(actualSWVersion, expSWVersion)
+      expVersion      = []
+      result          = false
+      i               = 0
+      swVersion       = actualSWVersion.split('-')[0].split('.')
+      expVersion      = expSWVersion.split('-')[0].split('.')
+      swVersion.each do |version|
+         if (version > expVersion[i])
+            result = true
+            break
+         end
+         i += 1
+      end
+   rescue
+      @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+      @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+      @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+   ensure
+      return result
+   end
+
+   #===================================================
+   # NAME
+   #     self.verify_dm_row_greyout
+   #
+   # DESCRIPTION
+   #     Method used to verify the greyout check
+   #
+   # PARAMETERS
+   #     None
+   #
+   # USAGE EXAMPLES
+   #     self.verify_dm_row_greyout
+   #===================================================
+   def self.verify_dm_row_greyout()
+      retVal = []
+      begin
+         create_lifeshield_instance
+         retVal << mednet_cloud_navigation('deviceList')
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.isRowGrayedOut('#{@staticInformation['deviceName']}')")
+         @logger.log_message("Is row greyed out in Device List: #{retVal.last}", LogUtilities::INFO, false)
+         unless @lifeshield.isLoginPageDisplayed
+            retVal << @lifeshield.logout
+            @logger.log_message("Logged out from Lifeshield: #{retVal.last}", LogUtilities::INFO, false)
+         end
+      rescue
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         @lifeshield.close unless @lifeshield.nil?
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #===============================================================
+   # NAME
+   #     self.set_interoperability_feature
+   #
+   # DESCRIPTION
+   #     Method used to enable/disable the interoperability feature
+   #
+   # PARAMETERS
+   #     enable - accepts Boolean true/falsen
+   #
+   # USAGE EXAMPLES
+   #     self.set_interoperability_feature(false)
+   #   
+   # RETURN VALUE
+   #     true if success, false otherwise
+   #===============================================================
+   def self.set_interoperability_feature(enable)
+      retVal = []
+      text   = (enable.eql? true) ? 'Enable' : 'Disable'
+      begin
+         account    = Nokogiri::XML(File.read('C:\nodejs\node_modules\lifeshield\interface\rubytojs\MedNetCloud.xml')).xpath("//key[@name='customerId-a']/value").text if (File.exist? 'C:\nodejs\node_modules\lifeshield\interface\rubytojs\MedNetCloud.xml')
+         feature    = { "Interoperability" => {"Enabled" => enable} }
+         viewDetail = {"account" => account}
+         create_lifeshield_instance
+
+         # -----------------------------------------
+         # Logout and Login to Account Manager Login
+         @lifeshield.logout unless @lifeshield.isLoginPageDisplayed
+         @logger.log_message("Login to Account Manager login", LogUtilities::INFO, false)
+         retVal << @lifeshield.login('integration', 'Incorrect2!', 'system')
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickAccountProvisioning()")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.typeSearchValue(account)")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickViewDetails(viewDetail)")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickEdit()")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.setLicensingFeatureDetails(feature)")
+         @logger.log_message("Interoperability feature #{text} : #{retVal.last}", LogUtilities::INFO, false)
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickSave()")
+         @logger.log_message("Interoperability feature #{text} save : #{retVal.last}", LogUtilities::INFO, false)
+         if(retVal.present? && retVal.all?)
+
+            # ------------------------------------------
+            # Logout and Login to Customer Account Login
+            @lifeshield.logout unless @lifeshield.isLoginPageDisplayed
+            sleep 300
+            @logger.log_message("Login to Customer Account login", LogUtilities::INFO, false)
+            @lifeshield.login
+            retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickAccountConfiguration")
+            retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectConnectivityManagement")
+            nodeList  = eval("@lifeshield.#{@lifeshield.whereAmI}.getColumnValues('Name')")
+            @logger.log_message("Connectivity Adapter Available : #{nodeList}  -- Input CA node name : #{NODE_NAME}", LogUtilities::INFO, false)
+            nodeIndex = nodeList.find_index(NODE_NAME)
+            @logger.log_message("Index of the node #{nodeIndex+1} && Node name #{NODE_NAME}", LogUtilities::INFO, false)
+            retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectRowOption(nodeIndex+1, 'Push Security Package')")
+            @logger.log_message("Security Package Pushed : #{retVal.last}", LogUtilities::INFO, false)
+         else
+            retVal << false
+         end
+      rescue
+         retVal << false
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         @lifeshield.close unless @lifeshield.nil?
+         return retVal.present? && retVal.all?
+      end
+   end
+
+	#=================================================================
+   # NAME
+   #     self.set_ivehr_interoperability
+   #
+   # DESCRIPTION
+   #     Method used to enable/disable Enable IV-EHR Interoperability
+   #
+   # PARAMETERS
+   #     flag - accepts Boolean true/false
+   #
+   # USAGE EXAMPLES
+   #     self.set_ivehr_interoperability(flag)
+   #   
+   # RETURN VALUE
+   #     true if success, false otherwise
+   #================================================================
+   def self.set_ivehr_interoperability(flag)
+      retVal = []
+      text   = (flag.eql? true) ? 'Enable' : 'Disable'
+      begin
+         @logger.log_message("Login to Customer Account login", LogUtilities::INFO, false)
+         create_lifeshield_instance
+         @lifeshield.login
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickAccountConfiguration")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectConnectivityManagement")
+         nodeList  = eval("@lifeshield.#{@lifeshield.whereAmI}.getColumnValues('Name')")
+         @logger.log_message("Connectivity Adapter Available : #{nodeList}  -- Input CA node name : #{NODE_NAME}", LogUtilities::INFO, false)
+         nodeIndex = nodeList.find_index(NODE_NAME)
+         @logger.log_message("Index of the node #{nodeIndex+1} && Node name #{NODE_NAME}", LogUtilities::INFO, false)
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectRowOption(nodeIndex+1, 'View Details')")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickNodeSettingsEdit()")
+         @logger.log_message("Edit button click in Node settings : #{retVal.last}", LogUtilities::INFO, false)
+         condition = (flag.eql? false) ? '!' : ''
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.enableInteroperability(#{flag})")
+         options = eval("@lifeshield.#{@lifeshield.whereAmI}.getInteroperabilityConfigurationOptions") if (flag.eql? true)
+         @logger.log_message("Available Configuration Option : #{options}", LogUtilities::INFO, false)
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectInteroperabilityConfigurationOption(#{INTEROPERABILITY_NAME})") if (flag.eql? true)
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickNodeSettingsSave()")
+         @logger.log_message("Save button click in Node settings : #{retVal.last}", LogUtilities::INFO, false)
+      rescue
+         retVal << false
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         @lifeshield.close unless @lifeshield.nil?
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #==========================================================
+   # NAME
+   #     self.edit_interoperability_profile
+   #
+   # DESCRIPTION
+   #     Method used to Edit interoperability profile
+   #
+   # PARAMETERS
+   #     action - accepts 'Add/Edit/Delete'
+   #     profileDetails - {'name'=> 'Alarm', 'active' => true , "receiverEndPoint": "https://localhost:8443/MmuProxyServlet"}
+   #
+   # USAGE EXAMPLES
+   #     self.edit_interoperability_profile
+   #   
+   # RETURN VALUE
+   #     true if success, false otherwise
+   #=========================================================
+   def self.edit_interoperability_profile(action, profileDetails)
+      retVal = []
+      begin
+         @logger.log_message("Login to Customer Account login", LogUtilities::INFO, false)
+         create_lifeshield_instance
+         @lifeshield.login
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickAccountConfiguration")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectInteroperabilityConfiguration")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickViewDetails(CONFIGURATION_NAME)")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickCreateNewConfigurationVersion")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.handleConfirmation('Yes')")
+         INTEGRATION_PROFILE.each do |profile|
+            case action
+            when 'Add'
+               profileDetails['profileType'] = profile
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickAddProfile(profile)")
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.enterProfileDetails(profileDetails)")
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickSaveProfile(profile)")
+            when 'Edit'
+               profileDetails['profileType'] = profile
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickEditProfile(profile)")
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.enterProfileDetails(profileDetails)")
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickSaveProfile(profile)")
+            when 'Delete'
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickDeleteProfile(profile)")
+               retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.handleConfirmation('Yes')")
+            else
+               retVal << false
+               @logger.log_message("Incorrect Action keyword - #{action} given to method #{__method__}", LogUtilities::INFO, false)
+            end
+         end
+      rescue
+         retVal << false
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         eval("@lifeshield.#{@lifeshield.whereAmI}.clickApproveVersion")
+         @lifeshield.close
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #===================================================================
+   # NAME
+   #     self.send_and_verify_passcode
+   #
+   # DESCRIPTION
+   #     Used to send and verify the passcode during DL/SW activities
+   #
+   # PARAMETERS
+   #     None
+   #
+   # USAGE EXAMPLES
+   #     self.send_and_verify_passcode
+   #===================================================================
+   def self.send_and_verify_passcode
+      retVal = []
+      begin
+         timeVal  = Time.now
+         sleep 5
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickSendPasscode()")
+         code = eval("@lifeshield.email.retrieveOTP(timeVal)")
+         @logger.log_message("OTP : #{code}", LogUtilities::INFO, false)
+         sleep 5
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.enterPasscode(code)")
+         sleep 15
+      rescue
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #===================================================================
+   # NAME
+   #     self.manage_connectivity_adapter_list
+   #
+   # DESCRIPTION
+   #     Used to edit connectivity adapter list
+   #
+   # PARAMETERS
+   #     option - Push Security Package/View Details
+   #
+   # USAGE EXAMPLES
+   #     self.manage_connectivity_adapter_list('View Details')
+   #===================================================================
+   def self.manage_connectivity_adapter_list(option)
+      retVal = []
+      begin
+         nodeList  = eval("@lifeshield.#{@lifeshield.whereAmI}.getColumnValues('Name')")
+         @logger.log_message("Connectivity Adapter Available : #{nodeList}  -- Input CA node name : #{NODE_NAME}", LogUtilities::INFO, false)
+         nodeIndex = nodeList.find_index(NODE_NAME)
+         @logger.log_message("Index of the node #{nodeIndex+1} && Node name #{NODE_NAME}", LogUtilities::INFO, false)
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectRowOption(nodeIndex+1, option)")
+         sleep 30 if(option.eql? 'Push Security Package')
+      rescue
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #===============================================================
+   # NAME
+   #     self.set_device_configuration
+   #
+   # DESCRIPTION
+   #     Method used to set device configuration
+   #
+   # PARAMETERS
+   #     enable   - Boolean for enable/disable device
+   #
+   # USAGE EXAMPLES
+   #     self.set_interoperability_feature(false)
+   #   
+   # RETURN VALUE
+   #     true if success, false otherwise
+   #===============================================================
+   def self.set_device_configuration(enable = true)
+      retVal   = []
+      begin
+         account    = Nokogiri::XML(File.read('C:\nodejs\node_modules\lifeshield\interface\rubytojs\MedNetCloud.xml')).xpath("//key[@name='customerId-a']/value").text if (File.exist? 'C:\nodejs\node_modules\lifeshield\interface\rubytojs\MedNetCloud.xml')
+         viewDetail = {"account" => account}
+         device     = @staticInformation['deviceType']
+         version    = (device.downcase.include? 'solo') ? '1.0' : '1.2'
+         enable     = (device.downcase.include? 'solo') ? false : true
+         deviceHash = {device => { "Enabled"=> enable, "Versions"=> { version => enable } } }
+         create_lifeshield_instance
+
+         # -----------------------------------------
+         # Logout and Login to Account Manager Login
+         @lifeshield.logout unless @lifeshield.isLoginPageDisplayed
+         @logger.log_message("Login to Account Manager login", LogUtilities::INFO, false)
+         retVal << @lifeshield.login('integration', 'Incorrect2!', 'system')
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickAccountProvisioning()")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.typeSearchValue(account)")
+         sleep 3
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickViewDetails(viewDetail)")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickEdit()")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.setLicensingDeviceDetails(deviceHash)")
+         Int.lifeshield_screen_capture("#{@lifeshield.whereAmI}} setLicensingDeviceDetails")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickSave()")
+      rescue
+         retVal << false
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         @lifeshield.close unless @lifeshield.nil?
+         return retVal.present? && retVal.all?
+      end
+   end
+
+   #===============================================================
+   # NAME
+   #     self.connectivity_management
+   #
+   # DESCRIPTION
+   #     Method used to set connectivity management
+   #
+   # PARAMETERS
+   #     option - Boolean, false - to disable interoperability
+   #
+   # USAGE EXAMPLES
+   #     self.connectivity_management
+   #   
+   # RETURN VALUE
+   #     true if success, false otherwise
+   #===============================================================
+   def self.connectivity_management(option = true)
+      retVal = []
+      begin
+
+         # ------------------------------------------
+         # Logout and Login to Customer Account Login
+         @lifeshield.logout unless @lifeshield.isLoginPageDisplayed
+         @logger.log_message("Login to Customer Account login", LogUtilities::INFO, false)
+         @lifeshield.login
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.clickAccountConfiguration")
+         retVal << eval("@lifeshield.#{@lifeshield.whereAmI}.selectConnectivityManagement")
+         retVal << manage_connectivity_adapter_list('View Details')
+         retVal << eval("@lifeshield.connectivityManagement.clickNodeSettingsEdit()")
+         if (option.eql? false)
+            retVal << eval("@lifeshield.connectivityManagement.enableInteroperability(false)")
+            retVal << eval("@lifeshield.connectivityManagement.clickNodeSettingsSave()")
+            retVal << eval("@lifeshield.connectivityManagement.clickNodeSettingsEdit()")
+         end
+         retVal << eval("@lifeshield.connectivityManagement.enableInteroperability(true)")
+         options = eval("@lifeshield.connectivityManagement.getInteroperabilityConfigurationOptions()")
+         if options.length.positive? && (options.include? CONFIGURATION_NAME)
+            retVal << eval("@lifeshield.connectivityManagement.selectInteroperabilityConfigurationOption(CONFIGURATION_NAME)")
+         else
+            retVal << false
+            @logger.log_message("IV EHR configuration is not present in dropdown", LogUtilities::INFO, false)
+         end
+         retVal << eval("@lifeshield.connectivityManagement.clickNodeSettingsSave()") if retVal.last.eql? true
+         retVal << eval("@lifeshield.connectivityManagement.clickBackToList()")
+         retVal << manage_connectivity_adapter_list('Push Security Package') if retVal.all?
+      rescue
+         @logger.log_message("Something went wrong in the method : #{__method__}", LogUtilities::ERROR, false)
+         @logger.log_message("Exception caught: #{$!.inspect}\nError in method #{__method__}", LogUtilities::ERROR)
+         @logger.log_message("Exception backtrace:\n #{$!.backtrace.join("\n")}", LogUtilities::DEBUG, false)
+      ensure
+         form_logger_message("#{__method__} returns: | #{retVal.present? && retVal.all?} |")
+         return retVal.present? && retVal.all?
+      end
+   end
+end
